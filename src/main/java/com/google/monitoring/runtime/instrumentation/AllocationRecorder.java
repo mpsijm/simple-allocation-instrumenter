@@ -148,10 +148,7 @@ public class AllocationRecorder {
   }
 
   public static void recordAllocation(Class<?> cls, Object newObj) {
-    // The use of replace makes calls to this method relatively ridiculously
-    // expensive.
-    String typename = cls.getName().replace('.', '/');
-    recordAllocation(-1, typename, newObj);
+    recordAllocation(-1, cls.getName(), newObj);
   }
 
   /**
@@ -168,10 +165,6 @@ public class AllocationRecorder {
     }
 
     recordingAllocation.set(Boolean.TRUE);
-
-    if (count >= 0) {
-      desc = desc.replace('.', '/');
-    }
 
     // Copy value into local variable to prevent NPE that occurs when
     // instrumentation field is set to null by this class's shutdown hook
