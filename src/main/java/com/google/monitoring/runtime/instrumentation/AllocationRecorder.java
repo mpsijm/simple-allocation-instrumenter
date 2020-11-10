@@ -59,6 +59,28 @@ public class AllocationRecorder {
   // Mostly because, yes, arrays are faster than collections.
   private static volatile Sampler[] additionalSamplers;
 
+  private static class EmptySampler implements Sampler {
+    private static final EmptySampler SINGLETON = new EmptySampler();
+
+    @Override
+    public void sampleAllocation(int count, String desc, Object newObj, Instrumentation instr) {
+    }
+  }
+
+  private static class MultiSampler implements Sampler {
+    private static final MultiSampler SINGLETON = new MultiSampler();
+
+    @Override
+    public void sampleAllocation(int count, String desc, Object newObj, Instrumentation instr) {
+      //noinspection ForLoopReplaceableByForEach - Because that would create extra objects
+      for (int i = 0, samplersLength = additionalSamplers.length; i < samplersLength; i++) {
+        additionalSamplers[i].sampleAllocation(count, desc, newObj, instr);
+      }
+    }
+  }
+
+  private static volatile Sampler samplerWrapper = EmptySampler.SINGLETON;
+
   // Protects mutations of additionalSamplers.  Reads are okay because
   // the field is volatile, so anyone who reads additionalSamplers
   // will get a consistent view of it.
@@ -82,10 +104,12 @@ public class AllocationRecorder {
         System.arraycopy(samplers, 0, newSamplers, 0, samplers.length);
         newSamplers[samplers.length] = sampler;
         additionalSamplers = newSamplers;
+        samplerWrapper = MultiSampler.SINGLETON;
       } else {
         Sampler[] newSamplers = new Sampler[1];
         newSamplers[0] = sampler;
         additionalSamplers = newSamplers;
+        samplerWrapper = sampler;
       }
     }
   }
@@ -108,6 +132,7 @@ public class AllocationRecorder {
         }
         if (samplerCount == 0) {
           additionalSamplers = null;
+          samplerWrapper = EmptySampler.SINGLETON;
         } else {
           Sampler[] newSamplers = new Sampler[samplerCount];
           int i = 0;
@@ -118,6 +143,8 @@ public class AllocationRecorder {
             }
           }
           additionalSamplers = newSamplers;
+          if (newSamplers.length == 1) samplerWrapper = sampler;
+          else samplerWrapper = MultiSampler.SINGLETON;
         }
       }
     }
@@ -160,13 +187,7 @@ public class AllocationRecorder {
     // See https://github.com/google/allocation-instrumenter/issues/15
     Instrumentation instr = instrumentation;
     if (instr != null) {
-      Sampler[] samplers = additionalSamplers;
-      if (samplers != null) {
-        //noinspection ForLoopReplaceableByForEach - Because that would create extra objects
-        for (int i = 0, samplersLength = samplers.length; i < samplersLength; i++) {
-          samplers[i].sampleAllocation(count, desc, newObj, instr);
-        }
-      }
+      samplerWrapper.sampleAllocation(count, desc, newObj, instr);
     }
 
     recordingAllocation.set(Boolean.FALSE);
