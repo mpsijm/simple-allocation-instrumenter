@@ -173,15 +173,9 @@ public class AllocationRecorder {
     // See https://github.com/google/allocation-instrumenter/issues/15
     Instrumentation instr = instrumentation;
     if (instr != null) {
-      // calling getObjectSize() could be expensive,
-      // so make sure we do it only once per object
-      long objectSize = -1;
-
       Sampler[] samplers = additionalSamplers;
       if (samplers != null) {
-        if (objectSize < 0) {
-          objectSize = getObjectSize(newObj, (count >= 0), instr);
-        }
+        long objectSize = getObjectSize(newObj, (count >= 0), instr);
         for (Sampler sampler : samplers) {
           sampler.sampleAllocation(count, desc, newObj, objectSize);
         }
