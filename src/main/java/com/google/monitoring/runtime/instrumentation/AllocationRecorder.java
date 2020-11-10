@@ -111,14 +111,18 @@ public class AllocationRecorder {
           samplerCount--;
         }
       }
-      Sampler[] newSamplers = new Sampler[samplerCount];
-      int i = 0;
-      for (Sampler s : samplers) {
-        if (!s.equals(sampler)) {
-          newSamplers[i++] = s;
+      if (samplerCount == 0) {
+        additionalSamplers = null;
+      } else {
+        Sampler[] newSamplers = new Sampler[samplerCount];
+        int i = 0;
+        for (Sampler s : samplers) {
+          if (!s.equals(sampler)) {
+            newSamplers[i++] = s;
+          }
         }
+        additionalSamplers = newSamplers;
       }
-      additionalSamplers = newSamplers;
     }
   }
 
