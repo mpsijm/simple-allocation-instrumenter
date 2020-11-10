@@ -176,8 +176,9 @@ public class AllocationRecorder {
       Sampler[] samplers = additionalSamplers;
       if (samplers != null) {
         long objectSize = getObjectSize(newObj, (count >= 0), instr);
-        for (Sampler sampler : samplers) {
-          sampler.sampleAllocation(count, desc, newObj, objectSize);
+        //noinspection ForLoopReplaceableByForEach - Because that would create extra objects
+        for (int i = 0, samplersLength = samplers.length; i < samplersLength; i++) {
+          samplers[i].sampleAllocation(count, desc, newObj, objectSize);
         }
       }
     }
