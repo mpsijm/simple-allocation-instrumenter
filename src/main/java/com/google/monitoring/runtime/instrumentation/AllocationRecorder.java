@@ -100,8 +100,9 @@ public class AllocationRecorder {
       Sampler[] samplers = additionalSamplers;
       if (samplers != null) {
         int samplerCount = samplers.length;
-        for (Sampler s : samplers) {
-          if (s.equals(sampler)) {
+        //noinspection ForLoopReplaceableByForEach - Because that would create extra objects
+        for (int i = 0, samplersLength = samplers.length; i < samplersLength; i++) {
+          if (samplers[i].equals(sampler)) {
             samplerCount--;
           }
         }
@@ -110,9 +111,10 @@ public class AllocationRecorder {
         } else {
           Sampler[] newSamplers = new Sampler[samplerCount];
           int i = 0;
-          for (Sampler s : samplers) {
-            if (!s.equals(sampler)) {
-              newSamplers[i++] = s;
+          //noinspection ForLoopReplaceableByForEach - Because that would create extra objects
+          for (int j = 0, samplersLength = samplers.length; j < samplersLength; j++) {
+            if (!samplers[j].equals(sampler)) {
+              newSamplers[i++] = samplers[j];
             }
           }
           additionalSamplers = newSamplers;
