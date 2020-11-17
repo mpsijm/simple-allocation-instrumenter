@@ -16,6 +16,8 @@
 
 package com.google.monitoring.runtime.instrumentation;
 
+import java.lang.instrument.Instrumentation;
+
 /** This interface describes a function that is used to sample an allocation. */
 public interface Sampler {
   /**
@@ -31,7 +33,8 @@ public interface Sampler {
    *     ArrayList.toArray() for example).
    * @param desc the <code>String</code> descriptor of the class/primitive type being allocated.
    * @param newObj the new <code>Object</code> whose allocation we're recording.
-   * @param size the size of the object being allocated.
+   * @param instr the <code>Instrumentation</code> object that can be used to calculate the size of
+   *     the object, for example.
    */
-  public void sampleAllocation(int count, String desc, Object newObj, long size);
+  void sampleAllocation(int count, String desc, Object newObj, Instrumentation instr);
 }

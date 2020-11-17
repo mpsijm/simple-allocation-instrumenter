@@ -16,11 +16,8 @@
 
 package com.google.monitoring.runtime.instrumentation;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import java.lang.instrument.Instrumentation;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
 
 /**
  * The logic for recording allocations, called from bytecode rewritten by {@link
@@ -69,10 +66,6 @@ public class AllocationRecorder {
 
   // Used for reentrancy checks
   private static final ThreadLocal<Boolean> recordingAllocation = new ThreadLocal<Boolean>();
-
-  // Stores the object sizes for the last 100,000 encountered classes
-  private static final Cache<Class<?>, Long> classSizesCache =
-      CacheBuilder.newBuilder().weakKeys().maximumSize(100_000).build();
 
   /**
    * Adds a {@link Sampler} that will get run <b>every time an allocation is performed from Java
@@ -127,24 +120,14 @@ public class AllocationRecorder {
   }
 
   /**
-   * Returns the size of the given object. If the object is not an array, we check the cache first,
-   * and update it as necessary.
+   * Returns the size of the given object.
    *
    * @param obj the object.
-   * @param isArray indicates if the given object is an array.
    * @param instr the instrumentation object to use for finding the object size
    * @return the size of the given object.
    */
-  private static long getObjectSize(Object obj, boolean isArray, Instrumentation instr) {
-    if (isArray) {
-      return instr.getObjectSize(obj);
-    }
-
-    try {
-      return classSizesCache.get(obj.getClass(), () -> instr.getObjectSize(obj));
-    } catch (ExecutionException e) {
-      throw new RuntimeException(e);
-    }
+  public static long getObjectSize(Object obj, Instrumentation instr) {
+    return instr.getObjectSize(obj);
   }
 
   public static void recordAllocation(Class<?> cls, Object newObj) {
@@ -175,10 +158,9 @@ public class AllocationRecorder {
     if (instr != null) {
       Sampler[] samplers = additionalSamplers;
       if (samplers != null) {
-        long objectSize = getObjectSize(newObj, (count >= 0), instr);
         //noinspection ForLoopReplaceableByForEach - Because that would create extra objects
         for (int i = 0, samplersLength = samplers.length; i < samplersLength; i++) {
-          samplers[i].sampleAllocation(count, desc, newObj, objectSize);
+          samplers[i].sampleAllocation(count, desc, newObj, instr);
         }
       }
     }

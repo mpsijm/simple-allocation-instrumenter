@@ -21,9 +21,9 @@ and pass an instance of that to `AllocationRecorder.addSampler()`:
 
 ```java
 AllocationRecorder.addSampler(new Sampler() {
-  public void sampleAllocation(int count, String desc, Object newObj, long size) {
+  public void sampleAllocation(int count, String desc, Object newObj, Instrumentation instr) {
     System.out.println("I just allocated the object " + newObj +
-      " of type " + desc + " whose size is " + size);
+      " of type " + desc + " whose size is " + AllocationRecorder.getObjectSize(newObj, instr));
     if (count != -1) { System.out.println("It's an array of size " + count); }
   }
 });
