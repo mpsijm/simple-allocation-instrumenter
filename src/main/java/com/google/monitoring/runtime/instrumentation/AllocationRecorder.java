@@ -98,23 +98,25 @@ public class AllocationRecorder {
   public static void removeSampler(Sampler sampler) {
     synchronized (samplerLock) {
       Sampler[] samplers = additionalSamplers;
-      int samplerCount = samplers.length;
-      for (Sampler s : samplers) {
-        if (s.equals(sampler)) {
-          samplerCount--;
-        }
-      }
-      if (samplerCount == 0) {
-        additionalSamplers = null;
-      } else {
-        Sampler[] newSamplers = new Sampler[samplerCount];
-        int i = 0;
+      if (samplers != null) {
+        int samplerCount = samplers.length;
         for (Sampler s : samplers) {
-          if (!s.equals(sampler)) {
-            newSamplers[i++] = s;
+          if (s.equals(sampler)) {
+            samplerCount--;
           }
         }
-        additionalSamplers = newSamplers;
+        if (samplerCount == 0) {
+          additionalSamplers = null;
+        } else {
+          Sampler[] newSamplers = new Sampler[samplerCount];
+          int i = 0;
+          for (Sampler s : samplers) {
+            if (!s.equals(sampler)) {
+              newSamplers[i++] = s;
+            }
+          }
+          additionalSamplers = newSamplers;
+        }
       }
     }
   }
